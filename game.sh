@@ -5,20 +5,23 @@ declare -a spots
 declare -a users=(p1 c)
 declare -a b=(. . . . . . . . . .)
 declare -a ids=(o x)
-declare -a starts
+declare -a starts=c
 
 # Informacje o grze
-how_to_play()
+usage()
 {
 cat<<_EOF_
 
-  Witaj w mojej grze.
+  Dostepne parametry:
+    --start           - Gracz rozpoczyna gre (domyslnie zaczyna komputer)
+    --nought={param}  - Podmien 'o' na {param}
+    --cross={param}   - Podmien 'x' na {param}
+    --how-to-play     - Wyswietla zasady gry
 
+  Zasady gry:
   * Na poczatku rozgrywki zostaniesz poproszony o wybrbanie figury.
   Figura zaczynajaca rozgrywke: 'o'
-
   * Mozesz korzystac tylko z niezajetych pol oznaczonych kropka: '.'
-  
   * Wybor pola dokonywany jest poprzez wprowadzenie cyfry odpowiadajacej jednej z ponizszych pol:
 
 	  #  1 | 2 | 3
@@ -28,9 +31,7 @@ cat<<_EOF_
 	  #  7 | 8 | 9
 
   * Ture wygrywa gracz, ktoremu uda sie ulozyc ciagla linie (pozioma, pionowa, ukosna) z 3 figur
-
   * Skrypt na koniec rozgrywki poda wygranego lub oglosi remis w zaleznosci od wyniku
-
   * Aby wymusic zakonczenie wykonywania skryptu uzyj polecenia 'ctrl+c'
 
 _EOF_
@@ -77,27 +78,6 @@ cat <<_EOF_
     ${b[7]} | ${b[8]} | ${b[9]}
 
 _EOF_
-}
-
-register_player()
-{
-clear
-
-local yn
-while true; do
-  read -p "Wybor: Wybierz figure? [o/x]: " yn
-  case $yn in
-  [Oo] ) starts=p1
-         p1=o
-         c=x
-         break;;
-  [Xx] ) starts=c
-         p1=x
-         c=o
-         break;;
-   * )   echo -e "Ostrzezenie: Nieprawidlowy wybor (Sprobuj ponownie)";;
-  esac
-done
 }
 
 # Sprawdz dostepnosc danego pola
@@ -217,17 +197,46 @@ play()
 ### main ###
 trap force_exit INT
 
-while test $# -gt 0; do
-  case "$1" in
-    -h|--help)
-      how_to_play
-      exit 0
-      break
-      ;;
-  esac
+# Pobierz parametry
+optspec=":h-:"
+while getopts "$optspec" optchar; do
+    case "${optchar}" in
+        -)
+            case "${OPTARG}" in
+                start)
+                    starts=p1
+                    ;;
+                nought=*)
+                    ids[0]=${OPTARG#*=}
+                    ;;
+                cross=*)
+                    ids[1]=${OPTARG#*=}
+                    ;;
+                *)
+                    if [ "$OPTERR" = 1 ] && [ "${optspec:0:1}" != ":" ]; then
+                        echo -e "Blad: nieznany argument: ${OPTARG}"
+                    fi
+                    ;;
+            esac;;
+        h)
+            usage
+            exit 2
+            ;;
+        *)
+            if [ "$OPTERR" != 1 ] || [ "${optspec:0:1}" = ":" ]; then
+                echo -e "Blad: Brak opcji: '-${OPTARG}'"
+            fi
+            ;;
+    esac
 done
 
-register_player
+if [[ ${starts} = "p1" ]]; then
+  p1=${ids[0]}
+  c=${ids[1]}
+else
+  c=${ids[0]}
+  p1=${ids[1]}
+fi
 play
 
 while true; do
