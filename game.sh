@@ -12,13 +12,26 @@ how_to_play()
 {
 cat<<_EOF_
 
-  Witaj w mojej grze, zasady poruszania sie:
+  Witaj w mojej grze.
 
-	#  1 | 2 | 3
-	#  --------
-	#  4 | 5 | 6
-	#  --------
-	#  7 | 8 | 9
+  * Na poczatku rozgrywki zostaniesz poproszony o wybrbanie figury.
+  Figura zaczynajaca rozgrywke: 'o'
+
+  * Mozesz korzystac tylko z niezajetych pol oznaczonych kropka: '.'
+  
+  * Wybor pola dokonywany jest poprzez wprowadzenie cyfry odpowiadajacej jednej z ponizszych pol:
+
+	  #  1 | 2 | 3
+	  #  --------
+	  #  4 | 5 | 6
+	  #  --------
+	  #  7 | 8 | 9
+
+  * Ture wygrywa gracz, ktoremu uda sie ulozyc ciagla linie (pozioma, pionowa, ukosna) z 3 figur
+
+  * Skrypt na koniec rozgrywki poda wygranego lub oglosi remis w zaleznosci od wyniku
+
+  * Aby wymusic zakonczenie wykonywania skryptu uzyj polecenia 'ctrl+c'
 
 _EOF_
 }
@@ -204,7 +217,16 @@ play()
 ### main ###
 trap force_exit INT
 
-how_to_play
+while test $# -gt 0; do
+  case "$1" in
+    -h|--help)
+      how_to_play
+      exit 0
+      break
+      ;;
+  esac
+done
+
 register_player
 play
 
